@@ -25,20 +25,20 @@ class Customer extends Thread {
 	public void run() {
 		while(true) {
 			Random random = new Random();
-			int number = random.nextInt(bankThreadList.size()-1);
+			int number = random.nextInt(bankThreadList.size());
 			Bank bank = bankThreadList.get(number);
 			status = "requesting";
 			int moneyRequested = 0;
 
 			if(moneyRequired >= 50){
-				moneyRequested = random.nextInt(50);
+				moneyRequested = random.nextInt(50) +1;
 			}else{
 				moneyRequested = moneyRequired;
 			}
 			Message dataToBank = new Message(customerName, moneyRequested, bank, status, this);
 			try {
 				int Random_wait_time = random.nextInt(90) + 10;
-				this.sleep(Random_wait_time);
+				Thread.sleep(Random_wait_time);
 				String forSharedQueue = customerName+" requests a loan of "+moneyRequested+" dollar(s) from "+bank.bankName;
 				sharedQueue.put(forSharedQueue);
 				bank.bankQueue.put(dataToBank);
@@ -58,11 +58,12 @@ class Customer extends Thread {
 			if (moneyRequired == 0 || bankThreadList.size() == 0) {
 				try {
 					if(moneyRequired!= 0 && bankThreadList.size() == 0){
-						String forSharedQueue = customerName +" was only able to borrow "+(originalAmount - moneyRequired)+" dollar(s). Boo Hoo!";
+						String forSharedQueue ="Later/"+ customerName +" was only able to borrow "+(originalAmount - moneyRequired)+" dollar(s). Boo Hoo!";
 						sharedQueue.put(forSharedQueue);
+						// bank.customers.remove(this);
 						break;
 					}
-					String forSharedQueue = customerName +" has reached the objective of "+originalAmount+ " dollar(s). Woo Hoo!";
+					String forSharedQueue ="Later/"+ customerName +" has reached the objective of "+originalAmount+ " dollar(s). Woo Hoo!";
 					sharedQueue.put(forSharedQueue);
 					break;
 				} catch (InterruptedException e) {

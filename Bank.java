@@ -1,5 +1,6 @@
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.*;
+import java.util.Random;
 
 class Bank extends Thread {
 
@@ -22,37 +23,30 @@ class Bank extends Thread {
 			try {
 				Message dataFromCustomer;
 				dataFromCustomer = bankQueue.take();
+				if(dataFromCustomer.getMsg() == "exit"){
+					break;
+				}
 				String customerName = dataFromCustomer.getString();
 				int moneyRequired = dataFromCustomer.getInteger();
 				String status = dataFromCustomer.getStatus();
-
 				if (status == "requesting" && moneyRequired <= moneyInBank) {
 					status = "accepted";
 					this.moneyInBank -= moneyRequired;
 					Message msg = new Message(this, status);
-
-					String forSharedQueue = bankName+" approves a loan of "+moneyRequired+ " dollars from "+ customerName;
+					String forSharedQueue = bankName + " approves a loan of " + moneyRequired + " dollars from "
+							+ customerName;
 					sharedQueue.put(forSharedQueue);
 					dataFromCustomer.getCustomer().customerQueue.put(msg);
 				} else {
 					status = "rejected";
-					customers.remove(dataFromCustomer.getCustomer());
 					Message msg = new Message(this, status);
-					String forSharedQueue = bankName+" denies a loan of "+moneyRequired+ " dollars from "+ customerName;
+					String forSharedQueue = bankName + " denies a loan of " + moneyRequired + " dollars from "
+							+ customerName;
 					sharedQueue.put(forSharedQueue);
 					dataFromCustomer.getCustomer().customerQueue.put(msg);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}
-			if (customers.size() == 0) {
-				try {
-					String forSharedQueue = bankName+" has "+ moneyInBank+" dollar(s) remaining.";
-					sharedQueue.put(forSharedQueue);
-					break;
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
 			}
 		}
 	}
